@@ -1,8 +1,26 @@
 const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+admin.initializeApp();
 
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
-// exports.helloWorld = functions.https.onRequest((request, response) => {
-//  response.send("Hello from Firebase!");
-// });
+const firestore = new Firestore();
+const settings = {/* your settings... */ timestampsInSnapshots: true};
+firestore.settings(settings);
+
+exports.addAUser = functions.https.onRequest((req, res) => {
+    try {
+        const userCollection = admin.firestore().collection("user");
+
+        var userToSave = {
+            name: req.body.data.name,
+            idade: req.body.data.idade
+        };
+
+        console.log(userToSave);
+
+        userCollection.add(userToSave);
+    } catch (error) {
+        console.log('DAAM:', error);
+        return error;
+    }
+});
+
