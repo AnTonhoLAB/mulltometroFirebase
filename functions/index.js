@@ -20,120 +20,37 @@ exports.addRoom = functions.https.onRequest((req, res) => {
     const roomCollection = db.collection("room");
     const roomToSave = req.body.data
 
-    return roomCollection.add(roomToSave)    //save room
+
+    return roomCollection.add(roomToSave)
             .then( roomSaved => {
                 return db.runTransaction( transaction => {
                     return transaction.get(db.collection("user").doc(roomToSave.adminId))
-                        .then( snapshot => {
-                            console.log("Run get collection");
+                         .then( snapshot => {
 
-                            const adm = snapshot.get("adminRooms");
-                            adm.push("new field");
-                            console.log(adm);
+                            var adminRoomArray = snapshot.data().adminRooms
 
-                            const adminRoomArray = snapshot.data().adminRooms//get('adminRooms');
-                            adminRoomArray.push('newfield');
-                            console.log(adminRoomArray);
-                            
-                            // transaction.update(roomSaved.adminId, 'adminRooms', adminRoomArray);
-                            // transaction.update(db.collection("user").doc(roomToSave.adminId), { adminRooms: adminRoomArray } );
-                            
-                            return res.status(200).send({ save: true});
-                         }).catch(err => {
-                             console.log("deu ruimzao aqui" + err);
-                             return err;
-                         });
-                }).catch( err =>{
-                        console.log("deu ruim 1");
-                        return err
-                        // return res.status(500).send(err);
-                });
-        
+                            if  (adminRoomArray && adminRoomArray.length) {
+                                adminRoomArray.push('newfield');
+                            } else {
+                                adminRoomArray = ["oldField"];
+                            }
+                            console.log("setup array " + adminRoomArray);
 
-
-                //old other
+                            return transaction.update(db.collection("user").doc(roomToSave.adminId), { adminRooms: adminRoomArray } );
+                        });
+                    });
+                })
+            .then( reess => {
+                console.log("save transaction");
                 
-                // return userCollection.doc(roomToSave.adminId).get() //get user to add room in user rooms
-                //         .then(re => {
-                        
-                //             const adminRoomsArray = re.get(adminRooms);
-                //             adminRoomsArray.push('newfield');
-                            
-                //             return userCollection.doc(roomToSave.adminId).update();
-
-                //             return res.status(200).send(re);
-                //         }).catch(err => {
-                //             console.log("Não achei mano");
-                //             return err
-                //         });
-
-    }).catch( err =>{
-        console.log("deu ruim2");
-        return err
-        // return res.status(500).send(err);
-    });
-            
+                return res.status(200).send({ data: roomToSave} );
+            })
+            .catch( err =>{
+                console.log("deu ruim: " + err );
+                return res.status(500).send( { erro: err } );
+            })
 });
 
-exports.addNewRoom = functions.https.onRequest((req, res) => {
-    const userCollection = db.collection("user");
-    const roomCollection = db.collection("room");
-    const roomToSave = req.body.data
-
-    return roomCollection.add(roomToSave)    //save room
-            .then( roomSaved => {
-                return db.runTransaction( transaction => {
-                    return transaction.get(db.collection("user").doc(roomToSave.adminId))
-                        .then( snapshot => {
-                            console.log("Run get collection");
-
-                            const adm = snapshot.get("adminRooms");
-                            adm.push("new field");
-                            console.log(adm);
-
-                            const adminRoomArray = snapshot.data().adminRooms//get('adminRooms');
-                            adminRoomArray.push('newfield');
-                            console.log(adminRoomArray);
-                            
-                            // transaction.update(roomSaved.adminId, 'adminRooms', adminRoomArray);
-                            // transaction.update(db.collection("user").doc(roomToSave.adminId), { adminRooms: adminRoomArray } );
-                            
-                            return res.status(200).send({ save: true});
-                         }).catch(err => {
-                             console.log("deu ruimzao aqui" + err);
-                             return err;
-                         });
-                }).catch( err =>{
-                        console.log("deu ruim 1");
-                        return err
-                        // return res.status(500).send(err);
-                });
-        
-
-
-                //old other
-                
-                // return userCollection.doc(roomToSave.adminId).get() //get user to add room in user rooms
-                //         .then(re => {
-                        
-                //             const adminRoomsArray = re.get(adminRooms);
-                //             adminRoomsArray.push('newfield');
-                            
-                //             return userCollection.doc(roomToSave.adminId).update();
-
-                //             return res.status(200).send(re);
-                //         }).catch(err => {
-                //             console.log("Não achei mano");
-                //             return err
-                //         });
-
-    }).catch( err =>{
-        console.log("deu ruim2");
-        return err
-        // return res.status(500).send(err);
-    });
-            
-});
 exports.getRooms = functions.https.onRequest((req, res) => {
 
 });
