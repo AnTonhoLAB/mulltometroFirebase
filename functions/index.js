@@ -46,72 +46,12 @@ exports.addRoom = functions.https.onRequest((req, res) => {
             .then( reess => {
                 console.log("save transaction with: " + reess);
                 
-                return res.status(200).send(reess);
+                return res.status(200).send( { data: roomToSave } );
             })
             .catch( err =>{
                 console.log("deu ruim: " + err );
                 return res.status(500).send( { erro: err } );
             })
-});
-
-exports.addRoomCustom = functions.https.onRequest((req, res) => {
-
-    const roomCollection = db.collection("room");
-    const userCollection = db.collection("user");
-
-    const roomToSave = req.body.data;
-
-    var roomToReturn = [];
-
-    return roomCollection.add(roomToSave)
-        .then( roomSaved => {
-
-            var user = userCollection.doc(roomToSave.adminId)
-
-            var adminRoomArray = userCollection.doc(roomToSave.adminId).get("adminRooms");
-            
-            console.log("OPA" + typeof adminRoomArray);
-
-            if  (adminRoomArray.length > 0) {
-                adminRoomArray.push(roomSaved);
-            } else { 
-                adminRoomArray = [roomSaved]
-            }
-            console.log("array: " + adminRoomArray);
-            
-            userCollection.doc(roomToSave.adminId).update({ "adminRooms": adminRoomArray});
-
-
-            // console.log("user: " + user);
-            
-
-            // userCollection.doc(roomToSave.adminId).set(user);
-
-
-
-            // return db.collection("user").doc(roomToSave.adminId).onSnapshot( snp => {
-            //     var data = snp.data;
-            //     // var admRooms = snp.data().adminRooms;
-            //     data.admRooms.push(roomSaved);          
-            //     console.log("1");
-                
-            //     db.collection("user").doc(roomToSave.adminId).update(snp.data());
-            //     console.log("2");
-            //     return res.status(200).send(snp.data().adminRooms);
-            // })
-
-            
-        //   return  res.status(200).send( db.collection("user").doc(roomToSave.adminId)) ;
-
-                // var adminRoomArray = snapshot.data().adminRooms
-            return  res.status(200).send(userCollection.doc(roomToSave.adminId).get("adminRooms"));
-
-        })
-    .catch( err => {
-        console.log(err);
-        
-        return res.status(500).send(err);
-    });
 });
 
 exports.functionModel = functions.https.onRequest((req, res) => {
