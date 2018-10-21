@@ -20,9 +20,7 @@ exports.addUser = functions.https.onRequest((req, res) => {
 exports.addRoom = functions.https.onRequest((req, res) => {
     const userCollection = db.collection("user");
     const roomCollection = db.collection("room");
-    const roomToSave = req.body.data;
-
-    var roomToReturn = [];
+    var roomToSave = req.body.data;
 
     return roomCollection.add(roomToSave)
             .then( roomSaved => {
@@ -37,15 +35,12 @@ exports.addRoom = functions.https.onRequest((req, res) => {
                             } else {
                                 adminRoomArray = [roomSaved.id];
                             }
-                            roomToReturn = snapshot.data();
-                        
+                            roomToSave.id = roomSaved.id;
                             return transaction.update(db.collection("user").doc(roomToSave.adminId), { adminRooms: adminRoomArray } );
                         });
                     });
                 })
             .then( reess => {
-                console.log("save transaction with: " + reess);
-                
                 return res.status(200).send( { data: roomToSave } );
             })
             .catch( err =>{
