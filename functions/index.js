@@ -2,6 +2,8 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
 var db = admin.firestore();
+// admin.firestore().settings( { timestampsInSnapshots: true })
+
 
 exports.addUser = functions.https.onRequest((req, res) => { 
     const userCollection = db.collection("user");
@@ -47,6 +49,54 @@ exports.addRoom = functions.https.onRequest((req, res) => {
                 console.log("deu ruim: " + err );
                 return res.status(500).send( { erro: err } );
             })
+});
+
+exports.getAllRooms = functions.https.onRequest((req, res) => {
+    const roomCollection = db.collection("room");
+    const adminId = req.body.data.adminId
+
+    console.log(adminId);
+
+    return roomCollection.get() 
+        .then (obj => {
+            var rooms = []; 
+
+            obj.forEach(doc => {
+                const room = doc.data()
+
+                if (room.users === null){
+                    if (room.adminId === adminId) {
+                        rooms.push(room);
+                    }
+                } else {
+                    if (room.adminId === adminId ||  room.users.indexOf(adminId) > -1) {
+                        rooms.push(room);
+                    }
+                }
+            });
+
+            return res.status(200).send( { data: rooms } );
+        })
+        .catch(err =>{
+            console.log("deu ruim: " + err );
+            return res.status(300).send({ data: err });
+        });
+ 
+    // return roomCollection.where("adminId","==",adminId, "||", "array_contains",adminId ).get()
+    //     .then (obj => {
+    //         var rooms = []; 
+
+    //         obj.forEach(doc => {
+    //             rooms.push(doc.data());    
+    //         });
+    //         console.log("JOAO DORIA TA LOCAO DE PAU MOLE ");
+            
+    //         return res.status(200).send( { data: rooms } );
+    //     })
+    //     .catch(err =>{
+    //         console.log("deu ruim: " + err );
+    //         return res.status(300).send({ data: err });
+    //     });
 });
 
 exports.functionModel = functions.https.onRequest((req, res) => {
