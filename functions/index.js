@@ -31,9 +31,9 @@ exports.addRoom = functions.https.onRequest((req, res) => {
                             var adminRoomArray = snapshot.data().adminRooms
 
                             if  (adminRoomArray && adminRoomArray.length) {
-                                adminRoomArray.push(roomSaved.id);
+                                adminRoomArray.push(roomSaved);
                             } else {
-                                adminRoomArray = [roomSaved.id];
+                                adminRoomArray = [roomSaved];
                             }
                             roomToSave.id = roomSaved.id;
                             return transaction.update(db.collection("user").doc(roomToSave.adminId), { adminRooms: adminRoomArray } );
