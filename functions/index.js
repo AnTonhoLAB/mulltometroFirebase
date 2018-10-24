@@ -2,7 +2,7 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
 var db = admin.firestore();
-// admin.firestore().settings( { timestampsInSnapshots: true })
+admin.firestore().settings( { timestampsInSnapshots: true })
 
 
 exports.addUser = functions.https.onRequest((req, res) => { 
@@ -24,7 +24,10 @@ exports.addRoom = functions.https.onRequest((req, res) => {
     const roomCollection = db.collection("room");
     var roomToSave = req.body.data;
 
-    return roomCollection.add(roomToSave)
+    var doc = roomCollection.doc() 
+    roomToSave.id = doc.id
+
+    return roomCollection.doc(doc.id).set(roomToSave)
             .then( roomSaved => {
                 return db.runTransaction( transaction => {
                     return transaction.get(db.collection("user").doc(roomToSave.adminId))
@@ -33,11 +36,11 @@ exports.addRoom = functions.https.onRequest((req, res) => {
                             var adminRoomArray = snapshot.data().adminRooms
 
                             if  (adminRoomArray && adminRoomArray.length) {
-                                adminRoomArray.push(roomSaved);
+                                adminRoomArray.push(roomToSave.id);
                             } else {
-                                adminRoomArray = [roomSaved];
+                                adminRoomArray = [roomToSave.id];
                             }
-                            roomToSave.id = roomSaved.id;
+                            // roomToSave.id = roomSaved.id;
                             return transaction.update(db.collection("user").doc(roomToSave.adminId), { adminRooms: adminRoomArray } );
                         });
                     });
@@ -55,15 +58,14 @@ exports.getAllRooms = functions.https.onRequest((req, res) => {
     const roomCollection = db.collection("room");
     const adminId = req.body.data.adminId
 
-    console.log(adminId);
-
     return roomCollection.get() 
         .then (obj => {
             var rooms = []; 
-
+            console.log("É O GOLE");
+            
             obj.forEach(doc => {
-                const room = doc.data()
-
+                var room = doc.data()
+                room.id = doc.id
                 if (room.users === null){
                     if (room.adminId === adminId) {
                         rooms.push(room);
@@ -81,22 +83,6 @@ exports.getAllRooms = functions.https.onRequest((req, res) => {
             console.log("deu ruim: " + err );
             return res.status(300).send({ data: err });
         });
- 
-    // return roomCollection.where("adminId","==",adminId, "||", "array_contains",adminId ).get()
-    //     .then (obj => {
-    //         var rooms = []; 
-
-    //         obj.forEach(doc => {
-    //             rooms.push(doc.data());    
-    //         });
-    //         console.log("JOAO DORIA TA LOCAO DE PAU MOLE ");
-            
-    //         return res.status(200).send( { data: rooms } );
-    //     })
-    //     .catch(err =>{
-    //         console.log("deu ruim: " + err );
-    //         return res.status(300).send({ data: err });
-    //     });
 });
 
 exports.functionModel = functions.https.onRequest((req, res) => {
