@@ -85,6 +85,37 @@ exports.getAllRooms = functions.https.onRequest((req, res) => {
         });
 });
 
+exports.enterRoom = functions.https.onRequest((req, res) => {
+    const roomCollection = db.collection("room");
+    const userId = req.body.data.uid;
+    const roomId = req.body.data.roomId;
+
+    return roomCollection.doc(roomId).get()
+        .then(room => {
+            var data = room.data()
+            var users = data.users;
+
+            if (users === null){
+                users = [userId];
+            } else {
+                if (users.indexOf(userId) > -1) {
+                    return res.status(500).send("This user is already in this room");
+                } else {
+                    users.push(userId); 
+                }
+            }
+
+            data.users = users
+            roomCollection.doc(roomId).set(data)
+
+            return res.status(200).send( { data: data } );
+        })
+        .catch(err =>{
+            return res.status(500).send( { data: err } );
+        });
+
+});
+
 exports.functionModel = functions.https.onRequest((req, res) => {
 
 });
