@@ -61,7 +61,6 @@ exports.getAllRooms = functions.https.onRequest((req, res) => {
     return roomCollection.get() 
         .then (obj => {
             var rooms = []; 
-            console.log("É O GOLE");
             
             obj.forEach(doc => {
                 var room = doc.data()
@@ -89,11 +88,12 @@ exports.enterRoom = functions.https.onRequest((req, res) => {
     const roomCollection = db.collection("room");
     const userId = req.body.data.uid;
     const roomId = req.body.data.roomId;
-
+    console.log("starto: " + req.body.data);
+    
     return roomCollection.doc(roomId).get()
         .then(room => {
-            var data = room.data()
-            var users = data.users;
+            var roomData = room.data()
+            var users = roomData.users;
 
             if (users === null){
                 users = [userId];
@@ -105,10 +105,11 @@ exports.enterRoom = functions.https.onRequest((req, res) => {
                 }
             }
 
-            data.users = users
-            roomCollection.doc(roomId).set(data)
-
-            return res.status(200).send( { data: data } );
+            roomData.users = users
+            roomCollection.doc(roomId).set(roomData)
+            console.log("SALVO");
+            
+            return res.status(200).send( { data: roomData } );
         })
         .catch(err =>{
             return res.status(500).send( { data: err } );
