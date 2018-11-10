@@ -12,13 +12,13 @@ exports.setupUser = functions.https.onRequest((req, res) => {
     return userCollection.doc(userId).get()
         .then(docSnapshot => {
             if (docSnapshot.exists) {
-                return res.status(200).send(docSnapshot.data());
+                return res.status(200).send( { data: docSnapshot.data() } );
               } else {
                 throw new functions.https.HttpsError('Does not exist', 'This user does not exist', 'server custom error')
               }  
         })
         .catch(err => {
-            return res.status(500).send(err.message);
+            return res.status(500).send({ data: err });
         });
 });
 
