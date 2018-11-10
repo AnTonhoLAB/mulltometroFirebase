@@ -4,6 +4,23 @@ admin.initializeApp();
 var db = admin.firestore();
 admin.firestore().settings( { timestampsInSnapshots: true })
 
+exports.setupUser = functions.https.onRequest((req, res) => {
+    const userCollection = db.collection("user")
+    const data = req.body.data
+    userId = data.uid
+
+    return userCollection.doc(userId).get()
+        .then(docSnapshot => {
+            if (docSnapshot.exists) {
+                return res.status(200).send(docSnapshot.data());
+              } else {
+                throw new functions.https.HttpsError('Does not exist', 'This user does not exist', 'server custom error')
+              }  
+        })
+        .catch(err => {
+            return res.status(500).send(err.message);
+        });
+});
 
 exports.addUser = functions.https.onRequest((req, res) => { 
     const userCollection = db.collection("user");
@@ -99,7 +116,8 @@ exports.enterRoom = functions.https.onRequest((req, res) => {
                 users = [userId];
             } else {
                 if (users.indexOf(userId) > -1) {
-                    return res.status(500).send("This user is already in this room");
+                    // throw new Error('This user is already in this room');
+                    throw new functions.https.HttpsError('already-exists', 'This user is already in this room', 'server custom error')
                 } else {
                     users.push(userId); 
                 }
@@ -107,12 +125,12 @@ exports.enterRoom = functions.https.onRequest((req, res) => {
 
             roomData.users = users
             roomCollection.doc(roomId).set(roomData)
-            console.log("SALVO");
             
             return res.status(200).send( { data: roomData } );
         })
         .catch(err =>{
-            return res.status(500).send( { data: err } );
+            console.log("ERROR: ", err);
+            return res.status(500).send(  err.message  );
         });
 
 });
