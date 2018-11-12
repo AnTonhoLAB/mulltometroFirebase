@@ -92,7 +92,6 @@ exports.getAllRooms = functions.https.onRequest((req, res) => {
                     }
                 }
             });
-
             return res.status(200).send( { data: rooms } );
         })
         .catch(err =>{
