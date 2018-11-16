@@ -4,21 +4,36 @@ admin.initializeApp();
 var db = admin.firestore();
 admin.firestore().settings( { timestampsInSnapshots: true })
 
+exports.createUserInFirstLogin = functions.auth.user().onCreate((user) => {
+    const userCollection = db.collection("user");
+    const userId = user.uid;
+    var userToSave = {
+        firstTime: true,
+        name: user.email,
+        email: user.email,
+        uid: user.uid
+    };
+    return userCollection.doc(userId).set(userToSave);
+});
+
 exports.setupUser = functions.https.onRequest((req, res) => {
     const userCollection = db.collection("user")
     const data = req.body.data
-    userId = data.uid
+    const userId = data.uid
 
     return userCollection.doc(userId).get()
         .then(docSnapshot => {
-            if (docSnapshot.exists) {
-                return res.status(200).send( { data: docSnapshot.data() } );
-              } else {
+            var userToSave = docSnapshot.data()
+            if (userToSave.firstTime) {
+                userToSave.firstTime = false;
+                userCollection.doc(userId).set(userToSave);
                 throw new functions.https.HttpsError('Does not exist', 'This user does not exist', 'server custom error')
+              } else {
+                return res.status(200).send( { data: docSnapshot.data() } );
               }  
         })
         .catch(err => {
-            return res.status(500).send({ data: err });
+            return res.status(500).send({ data: err.message });
         });
 });
 
@@ -29,10 +44,10 @@ exports.addUser = functions.https.onRequest((req, res) => {
 
     return userCollection.doc(userToSave.uid).set(userToSave)
         .then(re => {
-            return res.status(200).send(re);
+            return res.status(200).send({ data: re } );
         })
         .catch(err => {
-            return res.status(500).send(err);
+            return res.status(500).send( { data: err });
         });
 });
 
@@ -141,4 +156,5 @@ exports.functionModel = functions.https.onRequest((req, res) => {
 exports.testServer = functions.https.onRequest((req, res) =>{
     res.status(200).send({"test": req.body})
 });
+
 
