@@ -51,6 +51,15 @@ exports.addUser = functions.https.onRequest((req, res) => {
         });
 });
 
+exports.getUserNames = functions.https.onRequest((req, res) => {
+    const userCollection = db.collection("user");
+    const users = req.body.data.users
+
+    
+
+
+});
+
 exports.addRoom = functions.https.onRequest((req, res) => {
     const userCollection = db.collection("user");
     const roomCollection = db.collection("room");
