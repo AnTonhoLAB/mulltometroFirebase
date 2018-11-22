@@ -51,10 +51,18 @@ exports.addUser = functions.https.onRequest((req, res) => {
         });
 });
 
-exports.getUser = functions.https.onRequest((req,res) => {
+exports.syncUser = functions.https.onRequest((req,res) => {
     const userCollection = db.collection("user");
     const userUid = req.body.data.uid
-    return userCollection.doc(uid);
+    
+    userCollection.doc(userUid).get()
+    .then(docSnapShot => {
+        const user = docSnapShot.data();
+        return res.status(200).send( { data: user } );
+    })
+    .catch(err => {
+        return res.status(501).send( { data: err} );
+    });
 });
 
 exports.getUserName = functions.https.onRequest((req, res) => {
@@ -125,28 +133,6 @@ exports.getAllRooms = functions.https.onRequest((req, res) => {
         console.log("getAllRooms error: " + err);
         return res.status(500).send( { erro: err } );
     });
-    // return roomCollection.get() 
-    //     .then (obj => {
-    //         var rooms = [];             
-    //         obj.forEach(doc => {
-    //             var room = doc.data()
-    //             room.id = doc.id
-    //             if (room.users === null){
-    //                 if (room.adminId === adminId) {
-    //                     rooms.push(room);
-    //                 }
-    //             } else {
-    //                 if (room.adminId === adminId ||  room.users.indexOf(adminId) > -1) {
-    //                     rooms.push(room);
-    //                 }
-    //             }
-    //         });
-    //         return res.status(200).send( { data: rooms } );
-    //     })
-    //     .catch(err =>{
-    //         console.log("deu ruim: " + err );
-    //         return res.status(300).send({ data: err });
-    //     });
 });
 
 exports.enterRoom = functions.https.onRequest((req, res) => {
