@@ -51,13 +51,24 @@ exports.addUser = functions.https.onRequest((req, res) => {
         });
 });
 
-exports.getUserNames = functions.https.onRequest((req, res) => {
+exports.getUser = functions.https.onRequest((req,res) => {
     const userCollection = db.collection("user");
-    const users = req.body.data.users
+    const userUid = req.body.data.uid
+    return userCollection.doc(uid);
+});
 
-    
+exports.getUserName = functions.https.onRequest((req, res) => {
+    const userCollection = db.collection("user");
+    const user = req.body.data.user
 
 
+    userCollection.doc(user).get()
+    .then(documentSnapShot => {
+        return res.status(200).send( { data: documentSnapShot.data().name } );
+    })
+    .catch(err => {
+        return res.status(501).send( { data: err} );
+    });
 });
 
 exports.addRoom = functions.https.onRequest((req, res) => {
@@ -97,31 +108,46 @@ exports.addRoom = functions.https.onRequest((req, res) => {
 
 exports.getAllRooms = functions.https.onRequest((req, res) => {
     const roomCollection = db.collection("room");
-    const adminId = req.body.data.adminId
+    const userToComparte = req.body.data
 
-    return roomCollection.get() 
-        .then (obj => {
-            var rooms = []; 
-            
-            obj.forEach(doc => {
-                var room = doc.data()
-                room.id = doc.id
-                if (room.users === null){
-                    if (room.adminId === adminId) {
-                        rooms.push(room);
-                    }
-                } else {
-                    if (room.adminId === adminId ||  room.users.indexOf(adminId) > -1) {
-                        rooms.push(room);
-                    }
-                }
-            });
-            return res.status(200).send( { data: rooms } );
-        })
-        .catch(err =>{
-            console.log("deu ruim: " + err );
-            return res.status(300).send({ data: err });
+    const query = roomCollection.where("users", "array-contains", userToComparte);
+
+    query.get()
+    .then((snp) => {
+        var rooms = [];
+        snp.forEach((doc) => {
+            rooms.push(doc.data())
         });
+
+        return res.status(200).send( { data: rooms } );
+    })
+    .catch((err) => {
+        console.log("O erro" + err);
+        
+        return res.status(500).send( { erro: err } );
+    });
+    // return roomCollection.get() 
+    //     .then (obj => {
+    //         var rooms = [];             
+    //         obj.forEach(doc => {
+    //             var room = doc.data()
+    //             room.id = doc.id
+    //             if (room.users === null){
+    //                 if (room.adminId === adminId) {
+    //                     rooms.push(room);
+    //                 }
+    //             } else {
+    //                 if (room.adminId === adminId ||  room.users.indexOf(adminId) > -1) {
+    //                     rooms.push(room);
+    //                 }
+    //             }
+    //         });
+    //         return res.status(200).send( { data: rooms } );
+    //     })
+    //     .catch(err =>{
+    //         console.log("deu ruim: " + err );
+    //         return res.status(300).send({ data: err });
+    //     });
 });
 
 exports.enterRoom = functions.https.onRequest((req, res) => {
