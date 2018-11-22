@@ -122,8 +122,7 @@ exports.getAllRooms = functions.https.onRequest((req, res) => {
         return res.status(200).send( { data: rooms } );
     })
     .catch((err) => {
-        console.log("O erro" + err);
-        
+        console.log("getAllRooms error: " + err);
         return res.status(500).send( { erro: err } );
     });
     // return roomCollection.get() 
