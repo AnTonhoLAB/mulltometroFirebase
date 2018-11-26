@@ -169,12 +169,6 @@ exports.enterRoom = functions.https.onRequest((req, res) => {
 
 });
 
-exports.functionModel = functions.https.onRequest((req, res) => {
-
-});
-
 exports.testServer = functions.https.onRequest((req, res) =>{
     res.status(200).send({"test": req.body})
 });
-
-
