@@ -1,5 +1,8 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+// const gsc = require('@google-cloud/storage')();
+// const spaw = require('child-process-promise').spaw;
+
 admin.initializeApp();
 var db = admin.firestore();
 admin.firestore().settings( { timestampsInSnapshots: true })
@@ -49,6 +52,19 @@ exports.addUser = functions.https.onRequest((req, res) => {
         .catch(err => {
             return res.status(500).send( { data: err });
         });
+});
+
+exports.saveToStorage = functions.storage.object().onFinalize((object) => {
+
+    const fileBucket = object.bucket; // The Storage bucket that contains the file.
+    const filePath = object.name; // File path in the bucket.
+
+    const img_url = 'https://firebasestorage.googleapis.com/v0/b/' + fileBucket + '/o/'
+    + encodeURIComponent(filePath)
+    + '?alt=media&token='
+    + object.metadata.firebaseStorageDownloadTokens;
+
+    
 });
 
 exports.syncUser = functions.https.onRequest((req,res) => {
