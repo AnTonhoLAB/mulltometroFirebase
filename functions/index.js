@@ -135,15 +135,13 @@ exports.getAllRooms = functions.https.onRequest((req, res) => {
     const queryLikeOnlyAdmin = roomCollection.where("admin", "==", userToComparte);
     
     var rooms = [];
-
-
     queryLikeOnlyAdmin.get()
     .then((snp)=> { // snp é uma query contem um snapshot com todas as salas que o usuario é um administrador
         snp.forEach((doc) => {  //percorre sala por sala
 
             const room = doc.data(); 
             if (room !== 'undefined') {
-                const roomLikeAdmin = room.users.filter(e => e.uid === room.admin.uid) // retorna uma coleção que o admin esta na sala
+                const roomLikeAdmin = room.users.filter(user => user.uid === room.admin.uid) // retorna uma coleção que o admin esta na sala
                 console.log("Tamanho admin"+roomLikeAdmin.length);
                 if (roomLikeAdmin.length === 0) { // se nao tiver na sala ele é apenas adimn
                     rooms.push(room) 
@@ -195,7 +193,6 @@ exports.enterRoom = functions.https.onRequest((req, res) => {
             console.log("ERROR: ", err);
             return res.status(500).send(  err.message  );
         });
-
 });
 
 exports.testServer = functions.https.onRequest((req, res) =>{
