@@ -106,18 +106,15 @@ exports.addRoom = functions.https.onRequest((req, res) => {
     return roomCollection.doc(doc.id).set(roomToSave)
             .then( roomSaved => {
                 return db.runTransaction( transaction => {
-                    return transaction.get(db.collection("user").doc(roomToSave.adminId))
+                    return transaction.get(db.collection("user").doc(roomToSave.admin.uid))
                          .then( snapshot => {
-
-                            var adminRoomArray = snapshot.data().adminRooms
-
-                            if  (adminRoomArray && adminRoomArray.length) {
-                                adminRoomArray.push(roomToSave.id);
+                            var adminRoomArray = snapshot.get("rooms")
+                            if  (Array.isArray(adminRoomArray)) {
+                                adminRoomArray.push(roomToSave);
                             } else {
-                                adminRoomArray = [roomToSave.id];
+                                adminRoomArray = [roomToSave];
                             }
-                            // roomToSave.id = roomSaved.id;
-                            return transaction.update(db.collection("user").doc(roomToSave.adminId), { adminRooms: adminRoomArray } );
+                            return transaction.update(db.collection("user").doc(roomToSave.admin.uid), { rooms: adminRoomArray } );
                         });
                     });
                 })
