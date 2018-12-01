@@ -164,8 +164,10 @@ exports.getAllRooms = functions.https.onRequest((req, res) => {
 
 exports.enterRoom = functions.https.onRequest((req, res) => {
     const roomCollection = db.collection("room");
-    const userId = req.body.data.uid;
+    // const data = 
+    const user = req.body.data.user;
     const roomId = req.body.data.roomId;
+
     console.log("starto: " + req.body.data);
     
     return roomCollection.doc(roomId).get()
@@ -174,13 +176,16 @@ exports.enterRoom = functions.https.onRequest((req, res) => {
             var users = roomData.users;
 
             if (users === null){
-                users = [userId];
+                users = [user];
             } else {
-                if (users.indexOf(userId) > -1) {
+                const userInRoom = users.filter(us => us.uid === user.uid) 
+
+                console.log("Tamanho admin"+userInRoom.length);
+                if (userInRoom.length > 0) {
                     // throw new Error('This user is already in this room');
                     throw new functions.https.HttpsError('already-exists', 'This user is already in this room', 'server custom error')
                 } else {
-                    users.push(userId); 
+                    users.push(user); 
                 }
             }
 
