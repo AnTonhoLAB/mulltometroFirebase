@@ -131,15 +131,26 @@ exports.getAllRooms = functions.https.onRequest((req, res) => {
     const roomCollection = db.collection("room");
     const userToComparte = req.body.data
 
-    const query = roomCollection.where("users", "array-contains", userToComparte);
+    const queryLikeUser = roomCollection.where("users", "array-contains", userToComparte);
+    const queryLikeOnlyAdmin = roomCollection.where("admin", "==", userToComparte);
+    
+    var rooms = [];
 
-    query.get()
-    .then((snp) => {
-        var rooms = [];
+
+    queryLikeOnlyAdmin.get()
+    .then((snp)=> { // retunr only room taht user be only admin
+        snp.forEach((doc) => {
+            const data = doc.data();
+            if (data.users.filter(e => e.name === data.admin).length === 0) {
+                rooms.push(data)
+            }
+        });
+        return  queryLikeUser.get()
+    })
+    .then((snp) => {   
         snp.forEach((doc) => {
             rooms.push(doc.data())
         });
-
         return res.status(200).send( { data: rooms } );
     })
     .catch((err) => {
