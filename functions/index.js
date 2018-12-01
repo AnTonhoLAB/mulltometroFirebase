@@ -101,9 +101,9 @@ exports.addRoom = functions.https.onRequest((req, res) => {
     var roomToSave = req.body.data;
 
     var doc = roomCollection.doc() 
-    roomToSave.id = doc.id
+    roomToSave.uid = doc.id
 
-    return roomCollection.doc(doc.id).set(roomToSave)
+    return roomCollection.doc(roomToSave.uid).set(roomToSave)
             .then( roomSaved => {
                 return db.runTransaction( transaction => {
                     return transaction.get(db.collection("user").doc(roomToSave.admin.uid))
@@ -138,11 +138,16 @@ exports.getAllRooms = functions.https.onRequest((req, res) => {
 
 
     queryLikeOnlyAdmin.get()
-    .then((snp)=> { // retunr only room taht user be only admin
-        snp.forEach((doc) => {
-            const data = doc.data();
-            if (data.users.filter(e => e.name === data.admin).length === 0) {
-                rooms.push(data)
+    .then((snp)=> { // snp é uma query contem um snapshot com todas as salas que o usuario é um administrador
+        snp.forEach((doc) => {  //percorre sala por sala
+
+            const room = doc.data(); 
+            if (room !== 'undefined') {
+                const roomLikeAdmin = room.users.filter(e => e.uid === room.admin.uid) // retorna uma coleção que o admin esta na sala
+                console.log("Tamanho admin"+roomLikeAdmin.length);
+                if (roomLikeAdmin.length === 0) { // se nao tiver na sala ele é apenas adimn
+                    rooms.push(room) 
+                }
             }
         });
         return  queryLikeUser.get()
