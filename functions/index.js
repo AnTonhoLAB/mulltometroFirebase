@@ -108,27 +108,27 @@ exports.addRoom = functions.https.onRequest((req, res) => {
     roomToSave.uid = doc.id
 
     return roomCollection.doc(roomToSave.uid).set(roomToSave)
-            .then( roomSaved => {
-                return db.runTransaction( transaction => {
-                    return transaction.get(db.collection("user").doc(roomToSave.admin.uid))
-                         .then( snapshot => {
-                            var adminRoomArray = snapshot.get("rooms")
-                            if  (Array.isArray(adminRoomArray)) {
-                                adminRoomArray.push(roomToSave);
-                            } else {
-                                adminRoomArray = [roomToSave];
-                            }
-                            return transaction.update(db.collection("user").doc(roomToSave.admin.uid), { rooms: adminRoomArray } );
-                        });
+        .then( roomSaved => {
+            return db.runTransaction( transaction => {
+                return transaction.get(db.collection("user").doc(roomToSave.admin.uid)) // eslint-disable-line promise/no-nesting
+                        .then( snapshot => {
+                        var adminRoomArray = snapshot.get("rooms")
+                        if  (Array.isArray(adminRoomArray)) {
+                            adminRoomArray.push(roomToSave);
+                        } else {
+                            adminRoomArray = [roomToSave];
+                        }
+                        return transaction.update(db.collection("user").doc(roomToSave.admin.uid), { rooms: adminRoomArray } );
                     });
-                })
-            .then( reess => {
-                return res.status(200).send( { data: roomToSave } );
+                });
             })
-            .catch( err =>{
-                console.log("deu ruim: " + err );
-                return res.status(500).send( { erro: err } );
-            })
+        .then( reess => {
+            return res.status(200).send( { data: roomToSave } );
+        })
+        .catch( err =>{
+            console.log("deu ruim: " + err );
+            return res.status(500).send( { erro: err } );
+        })
 });
 
 exports.getAllRooms = functions.https.onRequest((req, res) => {
