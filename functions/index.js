@@ -1,6 +1,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 // const gsc = require('@google-cloud/storage')();
+const gcs = require('@google-cloud/storage')();
 // const spaw = require('child-process-promise').spaw;
 
 admin.initializeApp();
@@ -55,16 +56,19 @@ exports.addUser = functions.https.onRequest((req, res) => {
 });
 
 exports.saveToStorage = functions.storage.object().onFinalize((object) => {
+    const userCollection = db.collection("user");
 
     const fileBucket = object.bucket; // The Storage bucket that contains the file.
     const filePath = object.name; // File path in the bucket.
-
+    const nameFile = filePath.slice(0, -4); // name file (remove .jpg from the name)    
+    
+    //Generate URL String
     const img_url = 'https://firebasestorage.googleapis.com/v0/b/' + fileBucket + '/o/'
     + encodeURIComponent(filePath)
     + '?alt=media&token='
     + object.metadata.firebaseStorageDownloadTokens;
-
-    
+    //Set photo URL in user field
+    return userCollection.doc(nameFile).update( { "photoURL": img_url } );
 });
 
 exports.syncUser = functions.https.onRequest((req,res) => {
@@ -179,8 +183,6 @@ exports.enterRoom = functions.https.onRequest((req, res) => {
                 users = [user];
             } else {
                 const userInRoom = users.filter(us => us.uid === user.uid) 
-
-                console.log("Tamanho admin"+userInRoom.length);
                 if (userInRoom.length > 0) {
                     // throw new Error('This user is already in this room');
                     throw new functions.https.HttpsError('already-exists', 'This user is already in this room', 'server custom error')
