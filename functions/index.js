@@ -46,9 +46,14 @@ exports.addUser = functions.https.onRequest((req, res) => {
     const userToSave = req.body.data
     console.log("Criando user" + req.body.data.name);
 
-    return userCollection.doc(userToSave.uid).set(userToSave)
+    return userCollection.doc(userToSave.uid).update(userToSave)
+    // return userCollection.doc(userToSave.uid).set(userToSave)
         .then(re => {
-            return res.status(200).send({ data: re } );
+            return userCollection.doc(userToSave.uid).get();
+            // return res.status(200).send({ data: userToSave } );
+        })
+        .then(userSaved => {
+            return res.status(200).send( { data: userSaved.data() } );
         })
         .catch(err => {
             return res.status(500).send( { data: err });
@@ -60,7 +65,10 @@ exports.saveToStorage = functions.storage.object().onFinalize((object) => {
 
     const fileBucket = object.bucket; // The Storage bucket that contains the file.
     const filePath = object.name; // File path in the bucket.
-    const nameFile = filePath.slice(0, -4); // name file (remove .jpg from the name)    
+    const nameFile = filePath.slice(0, -4); // name file (remove .jpg from the name)   
+    
+    // console.log(object.);
+    
     
     //Generate URL String
     const img_url = 'https://firebasestorage.googleapis.com/v0/b/' + fileBucket + '/o/'
@@ -134,7 +142,8 @@ exports.addRoom = functions.https.onRequest((req, res) => {
 exports.getAllRooms = functions.https.onRequest((req, res) => {
     const roomCollection = db.collection("room");
     const userToComparte = req.body.data
-
+    console.log(userToComparte);
+    
     const queryLikeUser = roomCollection.where("users", "array-contains", userToComparte);
     const queryLikeOnlyAdmin = roomCollection.where("admin", "==", userToComparte);
     
@@ -144,6 +153,8 @@ exports.getAllRooms = functions.https.onRequest((req, res) => {
         snp.forEach((doc) => {  //percorre sala por sala
 
             const room = doc.data(); 
+            console.log(room);
+            
             if (room !== 'undefined') {
                 const roomLikeAdmin = room.users.filter(user => user.uid === room.admin.uid) // retorna uma coleção que o admin esta na sala
                 console.log("Tamanho admin"+roomLikeAdmin.length);
@@ -157,6 +168,7 @@ exports.getAllRooms = functions.https.onRequest((req, res) => {
     .then((snp) => {   
         snp.forEach((doc) => {
             rooms.push(doc.data())
+            console.log(doc.data());
         });
         return res.status(200).send( { data: rooms } );
     })
